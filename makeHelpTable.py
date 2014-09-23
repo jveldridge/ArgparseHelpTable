@@ -42,16 +42,18 @@ def get_table(parser, nameWidth, reqWidth, descWidth):
     for arg in [a for a in set(vars(parser)['_option_string_actions'].values()) if a.default != '==SUPPRESS==']:
         print arg
         add_arg_row(table, arg, nameWidth, reqWidth, descWidth)
+        append(table, '-'*totalWidth, '\n')
 
     return ''.join(table)
 
 def add_arg_row(table, arg, nameWidth, reqWidth, descWidth):
     names = get_name_lines(arg, nameWidth)
     requireds = get_required_lines(arg, reqWidth)
-    print requireds
-    for i in xrange(len(max([names, requireds], key=lambda l: len(l)))):
+    descriptions = get_description_lines(arg, descWidth)
+    for i in xrange(len(max([names, requireds, descriptions], key=lambda l: len(l)))):
         append(table, '|', names[i] if len(names) > i else ' '*nameWidth, '|')
-        append(table, requireds[i] if len(requireds) > i else ' '*requiredWidth, '|\n')
+        append(table, requireds[i] if len(requireds) > i else ' '*reqWidth, '|')
+        append(table, descriptions[i] if len(descriptions) > i else ' '*descWidth, '|\n')
 
 def get_name_lines(arg, nameWidth):
     lines = list()
@@ -72,6 +74,22 @@ def get_required_lines(arg, reqWidth):
     # TODO: handle widths too great for single line
     line = ' REQUIRED' if arg.required else ' ' + str(arg.default)
     return [line + ' '*(reqWidth-len(line))]
+
+# TODO: refactor with get_name_lines
+def get_description_lines(arg, descWidth):
+    lines = list()
+
+    wordsRemaining = arg.help.split()
+    currLine = ''
+    while len(wordsRemaining) > 0:
+        if len(currLine) + len(wordsRemaining[0]) + 1 < descWidth:  # +1 is for space separator
+            currLine += (' ' if len(currLine) > 0 else '') + wordsRemaining.pop(0)
+        else:
+            lines.append(currLine + ' '*(descWidth-len(currLine)))
+            currLine = ''
+    lines.append(currLine + ' '*(descWidth-len(currLine)))
+
+    return lines
 
 def append(l, *args):
     for arg in args:
