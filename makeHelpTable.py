@@ -40,7 +40,6 @@ def get_table(parser, nameWidth, reqWidth, descWidth):
     append(table, '='*totalWidth, '\n')
 
     for arg in [a for a in set(vars(parser)['_option_string_actions'].values()) if a.default != '==SUPPRESS==']:
-        print arg
         add_arg_row(table, arg, nameWidth, reqWidth, descWidth)
         append(table, '-'*totalWidth, '\n')
 
