@@ -39,13 +39,19 @@ def get_table(parser, nameWidth, reqWidth, descWidth):
     append(table, DESCRIPTION_HEADER, ' '*(descWidth-len(DESCRIPTION_HEADER)), '|\n')
     append(table, '='*totalWidth, '\n')
 
-    for arg in set(vars(parser)['_option_string_actions'].values()):
+    for arg in [a for a in set(vars(parser)['_option_string_actions'].values()) if a.default != '==SUPPRESS==']:
+        print arg
         add_arg_row(table, arg, nameWidth, reqWidth, descWidth)
 
     return ''.join(table)
 
 def add_arg_row(table, arg, nameWidth, reqWidth, descWidth):
-    print get_name_lines(arg, nameWidth)
+    names = get_name_lines(arg, nameWidth)
+    requireds = get_required_lines(arg, reqWidth)
+    print requireds
+    for i in xrange(len(max([names, requireds], key=lambda l: len(l)))):
+        append(table, '|', names[i] if len(names) > i else ' '*nameWidth, '|')
+        append(table, requireds[i] if len(requireds) > i else ' '*requiredWidth, '|\n')
 
 def get_name_lines(arg, nameWidth):
     lines = list()
@@ -56,11 +62,16 @@ def get_name_lines(arg, nameWidth):
         if len(currLine) + len(namesRemaining[0]) + 1 < nameWidth:  # +1 is for slash separator
             currLine += ('/' if len(currLine) > 0 else '') + namesRemaining.pop(0)
         else:   # TODO: handle case where a single name is too long
-            lines.append(currLine)
+            lines.append(currLine + ' '*(nameWidth-len(currLine)))
             currLine = ''
-    lines.append(currLine)
+    lines.append(currLine + ' '*(nameWidth-len(currLine)))
 
     return lines
+
+def get_required_lines(arg, reqWidth):
+    # TODO: handle widths too great for single line
+    line = ' REQUIRED' if arg.required else ' ' + str(arg.default)
+    return [line + ' '*(reqWidth-len(line))]
 
 def append(l, *args):
     for arg in args:
