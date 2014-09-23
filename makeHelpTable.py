@@ -26,7 +26,7 @@ def run(args):
     path = os.path.abspath(args.script)
     sys.path.insert(0, os.path.dirname(os.path.abspath(path)))
     script = __import__(os.path.basename(path)[:-3])       # assume script path ends in .py
-    parser = script.__dict__[args.method]()
+    parser = vars(script)[args.method]()
     
     print get_table(parser, args.name_width, args.required_width, args.description_width)
 
@@ -39,7 +39,28 @@ def get_table(parser, nameWidth, reqWidth, descWidth):
     append(table, DESCRIPTION_HEADER, ' '*(descWidth-len(DESCRIPTION_HEADER)), '|\n')
     append(table, '='*totalWidth, '\n')
 
+    for arg in set(vars(parser)['_option_string_actions'].values()):
+        add_arg_row(table, arg, nameWidth, reqWidth, descWidth)
+
     return ''.join(table)
+
+def add_arg_row(table, arg, nameWidth, reqWidth, descWidth):
+    print get_name_lines(arg, nameWidth)
+
+def get_name_lines(arg, nameWidth):
+    lines = list()
+
+    namesRemaining = arg.option_strings
+    currLine = ''
+    while len(namesRemaining) > 0:
+        if len(currLine) + len(namesRemaining[0]) + 1 < nameWidth:  # +1 is for slash separator
+            currLine += ('/' if len(currLine) > 0 else '') + namesRemaining.pop(0)
+        else:   # TODO: handle case where a single name is too long
+            lines.append(currLine)
+            currLine = ''
+    lines.append(currLine)
+
+    return lines
 
 def append(l, *args):
     for arg in args:
