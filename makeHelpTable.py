@@ -28,9 +28,26 @@ def run(args):
     script = __import__(os.path.basename(path)[:-3])       # assume script path ends in .py
     parser = vars(script)[args.method]()
     
-    print get_table(parser, args.name_width, args.required_width, args.description_width)
+    parser_args = get_parser_args(parser)
+    if len(parser_args) > 0:
+        print get_table(parser_args, args.name_width, args.required_width, args.description_width)
 
-def get_table(parser, nameWidth, reqWidth, descWidth):
+    # handle sub-parsers
+    subparsers = vars(parser)['_subparsers']
+    if subparsers:
+        for name, subparser in subparsers.__dict__['_group_actions'][0].choices.iteritems():
+            print subparsers.title + ": " + name
+            print get_table(get_parser_args(subparser), args.name_width, args.required_width, args.description_width)
+
+
+def get_parser_args(parser):
+    usage = parser.format_usage()
+    allArgs = vars(parser)['_option_string_actions'].values()
+    args = [a for a in set(allArgs) if a.default != '==SUPPRESS==']
+    args.sort(key=lambda a: usage.find(min(a.option_strings, key=lambda s: len(s))))
+    return args
+
+def get_table(args, nameWidth, reqWidth, descWidth):
     table = list()
     totalWidth = nameWidth + reqWidth + descWidth + 4      # 4 column separators
     append(table, '='*totalWidth, '\n')
@@ -39,10 +56,6 @@ def get_table(parser, nameWidth, reqWidth, descWidth):
     append(table, DESCRIPTION_HEADER, ' '*(descWidth-len(DESCRIPTION_HEADER)), '|\n')
     append(table, '='*totalWidth, '\n')
 
-    usage = parser.format_usage()
-    allArgs = vars(parser)['_option_string_actions'].values()
-    args = [a for a in set(allArgs) if a.default != '==SUPPRESS==']
-    args.sort(key=lambda a: usage.find(min(a.option_strings, key=lambda s: len(s))))
     for arg in args:
         add_arg_row(table, arg, nameWidth, reqWidth, descWidth)
         append(table, '-'*totalWidth, '\n')
@@ -77,6 +90,8 @@ def get_lines(tokens, separator, width):
     while len(tokensRemaining) > 0:
         if len(currLine) + len(tokensRemaining[0]) + 1 < width:  # +1 is for separator
             currLine += (separator if len(currLine) > 0 else '') + tokensRemaining.pop(0)
+        elif len(currLine) == 0 and len(tokensRemaining) > 0:
+            currLine += tokensRemaining.pop(0)[:width]
         else:
             lines.append(currLine + ' '*(width-len(currLine)))
             currLine = ''
