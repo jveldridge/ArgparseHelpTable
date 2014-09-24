@@ -59,40 +59,28 @@ def add_arg_row(table, arg, nameWidth, reqWidth, descWidth):
         append(table, descriptions[i] if len(descriptions) > i else ' '*descWidth, '|\n')
 
 def get_name_lines(arg, nameWidth):
-    lines = list()
-
-    namesRemaining = arg.option_strings
-    currLine = ''
-    while len(namesRemaining) > 0:
-        if len(currLine) + len(namesRemaining[0]) + 1 < nameWidth:  # +1 is for slash separator
-            currLine += ('/' if len(currLine) > 0 else '') + namesRemaining.pop(0)
-        elif len(currLine) == 0 and len(namesRemaining) > 0:
-            currLine += namesRemaining.pop(0)[:nameWidth]
-        else:
-            lines.append(currLine + ' '*(nameWidth-len(currLine)))
-            currLine = ''
-    lines.append(currLine + ' '*(nameWidth-len(currLine)))
-
-    return lines
+    return get_lines(arg.option_strings, '/', nameWidth)
 
 def get_required_lines(arg, reqWidth):
     # TODO: handle widths too great for single line
     line = ' REQUIRED' if arg.required else ' ' + str(arg.default)
     return [line + ' '*(reqWidth-len(line))]
 
-# TODO: refactor with get_name_lines
 def get_description_lines(arg, descWidth):
+    return get_lines(arg.help.split(), ' ', descWidth)
+
+def get_lines(tokens, separator, width):
     lines = list()
 
-    wordsRemaining = arg.help.split()
+    tokensRemaining = list(tokens)
     currLine = ''
-    while len(wordsRemaining) > 0:
-        if len(currLine) + len(wordsRemaining[0]) + 1 < descWidth:  # +1 is for space separator
-            currLine += (' ' if len(currLine) > 0 else '') + wordsRemaining.pop(0)
+    while len(tokensRemaining) > 0:
+        if len(currLine) + len(tokensRemaining[0]) + 1 < width:  # +1 is for separator
+            currLine += (separator if len(currLine) > 0 else '') + tokensRemaining.pop(0)
         else:
-            lines.append(currLine + ' '*(descWidth-len(currLine)))
+            lines.append(currLine + ' '*(width-len(currLine)))
             currLine = ''
-    lines.append(currLine + ' '*(descWidth-len(currLine)))
+    lines.append(currLine + ' '*(width-len(currLine)))
 
     return lines
 
