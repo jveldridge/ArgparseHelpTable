@@ -39,7 +39,11 @@ def get_table(parser, nameWidth, reqWidth, descWidth):
     append(table, DESCRIPTION_HEADER, ' '*(descWidth-len(DESCRIPTION_HEADER)), '|\n')
     append(table, '='*totalWidth, '\n')
 
-    for arg in [a for a in set(vars(parser)['_option_string_actions'].values()) if a.default != '==SUPPRESS==']:
+    usage = parser.format_usage()
+    allArgs = vars(parser)['_option_string_actions'].values()
+    args = [a for a in set(allArgs) if a.default != '==SUPPRESS==']
+    args.sort(key=lambda a: usage.find(min(a.option_strings, key=lambda s: len(s))))
+    for arg in args:
         add_arg_row(table, arg, nameWidth, reqWidth, descWidth)
         append(table, '-'*totalWidth, '\n')
 
