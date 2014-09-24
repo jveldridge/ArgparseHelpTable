@@ -20,7 +20,7 @@ def get_parser():
 
 NAME_HEADER = ' PARAMETER NAME'
 REQUIRED_HEADER = ' REQUIRED/DEFAULT'
-DESCRIPTION_HEADER = 'DESCRIPTION'
+DESCRIPTION_HEADER = ' DESCRIPTION'
 
 def run(args):
     path = os.path.abspath(args.script)
@@ -62,7 +62,9 @@ def get_name_lines(arg, nameWidth):
     while len(namesRemaining) > 0:
         if len(currLine) + len(namesRemaining[0]) + 1 < nameWidth:  # +1 is for slash separator
             currLine += ('/' if len(currLine) > 0 else '') + namesRemaining.pop(0)
-        else:   # TODO: handle case where a single name is too long
+        elif len(currLine) == 0 and len(namesRemaining) > 0:
+            currLine += namesRemaining.pop(0)[:nameWidth]
+        else:
             lines.append(currLine + ' '*(nameWidth-len(currLine)))
             currLine = ''
     lines.append(currLine + ' '*(nameWidth-len(currLine)))
